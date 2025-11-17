@@ -21,7 +21,7 @@ defmodule SingularityEdge.MixProject do
   def application do
     [
       mod: {SingularityEdge.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :mnesia]
     ]
   end
 
