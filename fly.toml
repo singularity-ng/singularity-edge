@@ -67,7 +67,7 @@ kill_timeout = "5s"
 # scl = Santiago
 
 [processes]
-  app = "exec /app/bin/server"
+  app = "/app/bin/singularity_edge start"
 
 [[vm]]
   cpu_kind = "shared"
