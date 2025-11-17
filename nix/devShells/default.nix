@@ -1,20 +1,18 @@
-# Default development shell with Elixir, Rust, and all tools
+# Default development shell with Elixir and all tools
 # Full-featured development environment for singularity-edge
 
-{ pkgs, rustToolchain, lib }:
+{ pkgs, lib }:
 
 pkgs.mkShell {
   name = "singularity-edge-devshell";
 
   nativeBuildInputs =
     (lib.commonTools pkgs)
-    ++ (lib.devTools pkgs)
-    ++ (lib.rustTools { inherit pkgs rustToolchain; });
+    ++ (lib.devTools pkgs);
 
   shellHook = ''
     ${lib.setupEnvironment pkgs}
     ${lib.setupElixir}
-    ${lib.setupRust}
 
     # Load and configure Fly.io API token (shared function)
     ${lib.loadFlyToken}

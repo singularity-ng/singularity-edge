@@ -64,24 +64,8 @@ rec {
     direnv             # Environment management
     jq                 # JSON processor
     curl               # HTTP client
-    cachix             # Nix binary cache
-    # postgresql_17      # Not needed - using Mnesia
   ];
 
-  rustTools = { pkgs, rustToolchain }: with pkgs; [
-    # === Core Rust Toolchain ===
-    rustToolchain      # cargo, rustc, rustfmt, clippy, rust-analyzer
-    rust-analyzer      # IDE support
-    sccache            # Rust compilation cache
-
-    # === Essential Cargo Tools ===
-    cargo-edit         # cargo add/rm/upgrade commands
-    cargo-watch        # Auto-run on file changes
-
-    # === Quality & Security Tools ===
-    cargo-audit        # Security vulnerability checking
-    cargo-deny         # License and security policy
-  ];
 
   # Common shellHook components
   setupEnvironment = pkgs: ''
@@ -98,23 +82,10 @@ rec {
     export ERL_AFLAGS="-kernel shell_history enabled"
   '';
 
-  setupRust = ''
-    # Rust environment
-    export RUST_BACKTRACE=1
-    export CARGO_HOME=$PWD/.nix-cargo
-    export RUST_LOG=info
-
-    # Configure sccache for Rust compilation caching
-    if [ -n "$CI" ] || [ -n "$GITHUB_ACTIONS" ]; then
-      export RUSTC_WRAPPER=sccache
-      export SCCACHE_DIR=$PWD/.sccache
-      mkdir -p $SCCACHE_DIR
-    fi
-  '';
 
   setupPaths = ''
     # Add local bins to PATH
-    export PATH=$PWD/node_modules/.bin:$MIX_HOME/bin:$HEX_HOME/bin:$CARGO_HOME/bin:$HOME/.cargo/bin:$PATH
+    export PATH=$PWD/node_modules/.bin:$MIX_HOME/bin:$HEX_HOME/bin:$PATH
   '';
 
   installDeps = ''
