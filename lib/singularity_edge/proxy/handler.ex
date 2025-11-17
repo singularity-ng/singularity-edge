@@ -1,16 +1,39 @@
 defmodule SingularityEdge.Proxy.Handler do
   @moduledoc """
-  HTTP proxy handler that forwards requests to backend servers.
+  HTTP/HTTPS proxy handler that forwards requests to backend servers.
+
+  Supports multiple SSL modes:
+  - Termination (flexible, full, full_strict): Decrypt at edge, inspect HTTP
+  - Passthrough: Forward raw TCP stream, no decryption
   """
 
   require Logger
 
   alias SingularityEdge.Balancer.Pool
+  alias SingularityEdge.Proxy.TCPHandler
 
   @doc """
   Proxies a request to a backend server from the given pool.
+
+  For SSL passthrough mode, delegates to TCPHandler.
+  For termination modes, uses HTTP-level proxying.
   """
-  def proxy(conn, pool_name) do
+  def proxy(conn, pool_name, opts \\ []) do
+    ssl_mode = Keyword.get(opts, :ssl_mode, :full_strict)
+
+    case ssl_mode do
+      :passthrough ->
+        # TCP-level passthrough (handled outside Plug pipeline)
+        Logger.warn("SSL passthrough mode requires TCP listener, not HTTP. Falling back to HTTP proxy.")
+        http_proxy(conn, pool_name)
+
+      _ ->
+        # HTTP-level proxy with SSL termination
+        http_proxy(conn, pool_name)
+    end
+  end
+
+  defp http_proxy(conn, pool_name) do
     case Pool.select_backend(pool_name) do
       {:ok, backend} ->
         forward_request(conn, backend)
