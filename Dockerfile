@@ -1,8 +1,8 @@
 # Dockerfile for Singularity Edge
 # Multi-stage build optimized for Elixir releases
 
-ARG ELIXIR_VERSION=1.19.2
-ARG ERLANG_VERSION=28.2.4
+ARG ELIXIR_VERSION=1.17.3
+ARG ERLANG_VERSION=27.1.2
 ARG ALPINE_VERSION=3.20.3
 
 # ====================================
