@@ -1,0 +1,76 @@
+# Fly.io configuration for Singularity Edge
+# Deploy globally with: flyctl deploy
+
+app = "singularity-edge"
+primary_region = "iad"  # Washington DC
+kill_signal = "SIGTERM"
+kill_timeout = "5s"
+
+[experimental]
+  auto_rollback = true
+
+[build]
+
+[deploy]
+  release_command = "/app/bin/migrate"
+  strategy = "rolling"
+
+[env]
+  PHX_HOST = "singularity-edge.fly.dev"
+  PORT = "8080"
+  ERL_AFLAGS = "-proto_dist inet6_tcp"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "10s"
+    timeout = "2s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/api/health"
+    protocol = "http"
+
+# Global edge locations
+# Uncomment regions as needed for global coverage
+
+# [[services.regions]]
+# primary = "iad"  # Washington DC (primary)
+
+# North America
+# iad = Washington DC (primary)
+# ord = Chicago
+# dfw = Dallas
+# lax = Los Angeles
+# sea = Seattle
+# yyz = Toronto
+
+# Europe
+# ams = Amsterdam
+# cdg = Paris
+# fra = Frankfurt
+# lhr = London
+# mad = Madrid
+
+# Asia Pacific
+# nrt = Tokyo
+# hkg = Hong Kong
+# sin = Singapore
+# syd = Sydney
+
+# South America
+# gru = São Paulo
+# scl = Santiago
+
+[processes]
+  app = "exec /app/bin/server"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
