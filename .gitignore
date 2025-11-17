@@ -1,0 +1,23 @@
+# Nix
+result
+result-*
+.direnv/
+.devenv/
+.envrc.local
+
+# Development
+.nix-*
+.sccache/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Logs
+*.log
+logs/
