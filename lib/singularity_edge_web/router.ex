@@ -41,6 +41,13 @@ defmodule SingularityEdgeWeb.Router do
     resources "/pools", PoolController, except: [:new, :edit]
     post "/pools/:id/backends", PoolController, :add_backend
     delete "/pools/:id/backends/:backend_id", PoolController, :remove_backend
+
+    # SSL certificate management
+    resources "/certificates", CertificateController, except: [:new, :edit]
+    post "/certificates/:id/renew", CertificateController, :renew
+
+    # ACME challenge endpoint (Let's Encrypt HTTP-01)
+    get "/.well-known/acme-challenge/:token", ACMEController, :challenge
   end
 
   # Proxy catch-all (must be last)

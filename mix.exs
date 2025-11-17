@@ -66,7 +66,11 @@ defmodule SingularityEdge.MixProject do
 
       # Load balancing & proxy
       {:hackney, "~> 1.20"},
-      {:libcluster, "~> 3.4"}
+      {:libcluster, "~> 3.4"},
+
+      # SSL/TLS
+      {:site_encrypt, "~> 0.6"},
+      {:x509, "~> 0.8"}
     ]
   end
 

@@ -10,12 +10,17 @@ defmodule SingularityEdge.Balancer.Pool do
 
   alias SingularityEdge.Balancer.{Backend, Algorithm}
 
+  @type ssl_mode :: :terminate | :passthrough | :off
+
   defstruct [
     :name,
     :algorithm,
     backends: [],
     algorithm_state: %{},
-    health_check_interval: 10_000  # 10 seconds
+    health_check_interval: 10_000,  # 10 seconds
+    ssl_mode: :terminate,           # :terminate | :passthrough | :off
+    ssl_domain: nil,                # Domain for SSL cert (if terminating)
+    ssl_cert_id: nil                # Certificate ID (if using custom cert)
   ]
 
   # Client API

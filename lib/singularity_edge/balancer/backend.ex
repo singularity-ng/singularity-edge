@@ -13,6 +13,7 @@ defmodule SingularityEdge.Balancer.Backend do
           current_connections: integer(),
           total_requests: integer(),
           last_check: DateTime.t() | nil,
+          ssl_verify: boolean(),
           metadata: map()
         }
 
@@ -27,6 +28,7 @@ defmodule SingularityEdge.Balancer.Backend do
     healthy: true,
     current_connections: 0,
     total_requests: 0,
+    ssl_verify: true,
     metadata: %{}
   ]
 
