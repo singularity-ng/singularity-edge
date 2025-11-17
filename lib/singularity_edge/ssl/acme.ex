@@ -10,7 +10,7 @@ defmodule SingularityEdge.SSL.ACME do
 
   require Logger
 
-  alias SingularityEdge.{Repo, SSL.Certificate}
+  alias SingularityEdge.SSL.Certificate
 
   @doc """
   Provisions a new SSL certificate for the given domain using Let's Encrypt.
@@ -29,7 +29,7 @@ defmodule SingularityEdge.SSL.ACME do
   @doc """
   Renews an expiring certificate.
   """
-  def renew_certificate(%Certificate{} = cert) do
+  def renew_certificate(cert) when is_map(cert) do
     Logger.info("Renewing SSL certificate for #{cert.domain}")
 
     case provision_certificate(cert.domain) do
