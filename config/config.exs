@@ -8,8 +8,9 @@
 import Config
 
 config :singularity_edge,
-  ecto_repos: [SingularityEdge.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  base_domain: "singularity-edge.fly.dev",
+  default_pool: "default"
 
 # Configures the endpoint
 config :singularity_edge, SingularityEdgeWeb.Endpoint,

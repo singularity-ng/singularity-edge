@@ -9,6 +9,7 @@ defmodule SingularityEdge.Balancer.Pool do
   require Logger
 
   alias SingularityEdge.Balancer.{Backend, Algorithm}
+  alias SingularityEdge.Storage
 
   @type ssl_mode :: :flexible | :full | :full_strict | :passthrough | :off
 
@@ -75,17 +76,64 @@ defmodule SingularityEdge.Balancer.Pool do
 
   @impl true
   def init(opts) do
+    pool_name = Keyword.fetch!(opts, :name)
+    algorithm = Keyword.get(opts, :algorithm, :round_robin)
+    health_check_interval = Keyword.get(opts, :health_check_interval, 10_000)
+
+    # Save pool configuration to Mnesia
+    pool_attrs = %{
+      name: pool_name,
+      algorithm: algorithm,
+      ssl_mode: Keyword.get(opts, :ssl_mode, :full_strict),
+      ssl_domain: Keyword.get(opts, :ssl_domain),
+      ssl_cert_id: Keyword.get(opts, :ssl_cert_id),
+      validate_backend_cert: Keyword.get(opts, :validate_backend_cert, true),
+      health_check_interval: health_check_interval,
+      metadata: Keyword.get(opts, :metadata, %{})
+    }
+
+    Storage.Pool.create(pool_attrs)
+
+    # Load backends from Mnesia (for pool recovery)
+    backends = case Storage.Backend.list_by_pool(pool_name) do
+      {:ok, stored_backends} ->
+        # Convert stored backend maps to Backend structs
+        Enum.map(stored_backends, fn attrs ->
+          %Backend{
+            id: attrs.id,
+            host: attrs.host,
+            port: attrs.port,
+            scheme: attrs.scheme,
+            weight: attrs.weight,
+            healthy: attrs.healthy,
+            current_connections: attrs.current_connections,
+            total_requests: attrs.total_requests,
+            last_check: attrs.last_check,
+            ssl_verify: attrs.ssl_verify,
+            metadata: attrs.metadata
+          }
+        end)
+
+      {:error, _reason} ->
+        # No stored backends, start with empty list or provided backends
+        Keyword.get(opts, :backends, []) |> Enum.map(&Backend.new/1)
+    end
+
     state = %__MODULE__{
-      name: Keyword.fetch!(opts, :name),
-      algorithm: Keyword.get(opts, :algorithm, :round_robin),
-      backends: Keyword.get(opts, :backends, []) |> Enum.map(&Backend.new/1),
-      health_check_interval: Keyword.get(opts, :health_check_interval, 10_000)
+      name: pool_name,
+      algorithm: algorithm,
+      backends: backends,
+      health_check_interval: health_check_interval,
+      ssl_mode: pool_attrs.ssl_mode,
+      ssl_domain: pool_attrs.ssl_domain,
+      ssl_cert_id: pool_attrs.ssl_cert_id,
+      validate_backend_cert: pool_attrs.validate_backend_cert
     }
 
     # Schedule first health check
     schedule_health_check(state.health_check_interval)
 
-    Logger.info("Started pool #{state.name} with #{length(state.backends)} backends")
+    Logger.info("Started pool #{state.name} with #{length(state.backends)} backends (loaded from Mnesia)")
     {:ok, state}
   end
 
@@ -94,9 +142,32 @@ defmodule SingularityEdge.Balancer.Pool do
     if Enum.any?(state.backends, &(&1.id == backend.id)) do
       {:reply, {:error, :already_exists}, state}
     else
-      new_state = %{state | backends: [backend | state.backends]}
-      Logger.info("Added backend #{backend.id} to pool #{state.name}")
-      {:reply, :ok, new_state}
+      # Save backend to Mnesia
+      backend_attrs = %{
+        id: backend.id,
+        pool_name: state.name,
+        host: backend.host,
+        port: backend.port,
+        scheme: backend.scheme,
+        weight: backend.weight,
+        healthy: backend.healthy,
+        current_connections: backend.current_connections,
+        total_requests: backend.total_requests,
+        last_check: backend.last_check,
+        ssl_verify: backend.ssl_verify,
+        metadata: backend.metadata
+      }
+
+      case Storage.Backend.create(backend_attrs) do
+        {:ok, _} ->
+          new_state = %{state | backends: [backend | state.backends]}
+          Logger.info("Added backend #{backend.id} to pool #{state.name}")
+          {:reply, :ok, new_state}
+
+        {:error, reason} ->
+          Logger.error("Failed to save backend to Mnesia: #{inspect(reason)}")
+          {:reply, {:error, reason}, state}
+      end
     end
   end
 
@@ -107,9 +178,19 @@ defmodule SingularityEdge.Balancer.Pool do
     if length(new_backends) == length(state.backends) do
       {:reply, {:error, :not_found}, state}
     else
-      new_state = %{state | backends: new_backends}
-      Logger.info("Removed backend #{backend_id} from pool #{state.name}")
-      {:reply, :ok, new_state}
+      # Delete backend from Mnesia
+      case Storage.Backend.delete(backend_id) do
+        :ok ->
+          new_state = %{state | backends: new_backends}
+          Logger.info("Removed backend #{backend_id} from pool #{state.name}")
+          {:reply, :ok, new_state}
+
+        {:error, reason} ->
+          Logger.error("Failed to delete backend from Mnesia: #{inspect(reason)}")
+          # Still remove from memory even if Mnesia delete fails
+          new_state = %{state | backends: new_backends}
+          {:reply, :ok, new_state}
+      end
     end
   end
 

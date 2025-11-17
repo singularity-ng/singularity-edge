@@ -21,23 +21,6 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() == :prod do
-  database_url =
-    System.get_env("DATABASE_URL") ||
-      raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
-      """
-
-  maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
-
-  config :singularity_edge, SingularityEdge.Repo,
-    # ssl: true,
-    url: database_url,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-    # For machines with several cores, consider starting multiple pools of `pool_size`
-    # pool_count: 4,
-    socket_options: maybe_ipv6
-
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
   # want to use a different value for prod and you most likely don't want
@@ -50,22 +33,48 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  host = System.get_env("PHX_HOST") || "example.com"
-  port = String.to_integer(System.get_env("PORT") || "4000")
+  host = System.get_env("PHX_HOST") || "singularity-edge.fly.dev"
+  port = String.to_integer(System.get_env("PORT") || "8080")
 
-  config :singularity_edge, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
+  # Fly.io app name for clustering
+  app_name = System.get_env("FLY_APP_NAME") || "singularity-edge"
+
+  # Configure libcluster for automatic multi-region clustering
+  # Uses Fly.io's 6PN internal network for node discovery via DNS
+  config :libcluster,
+    topologies: [
+      fly6pn: [
+        strategy: Cluster.Strategy.DNSPoll,
+        config: [
+          polling_interval: 5_000,
+          query: "#{app_name}.internal",
+          node_basename: app_name
+        ]
+      ]
+    ]
 
   config :singularity_edge, SingularityEdgeWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
     http: [
-      # Enable IPv6 and bind on all interfaces.
-      # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
-      # See the documentation on https://hexdocs.pm/bandit/Bandit.html#t:options/0
-      # for details about using IPv6 vs IPv4 and loopback vs public addresses.
+      # Enable IPv6 and bind on all interfaces (Fly.io uses IPv6)
       ip: {0, 0, 0, 0, 0, 0, 0, 0},
       port: port
     ],
-    secret_key_base: secret_key_base
+    secret_key_base: secret_key_base,
+    force_ssl: [hsts: true, rewrite_on: [:x_forwarded_proto]]
+
+  # Mnesia directory configuration
+  mnesia_dir = System.get_env("MNESIA_DIR") || "/app/data/mnesia/prod"
+  config :mnesia, dir: String.to_charlist(mnesia_dir)
+
+  # Release cookie for distributed Erlang (required for clustering)
+  # Generate with: openssl rand -base64 32
+  # Set as Fly.io secret: flyctl secrets set RELEASE_COOKIE="..."
+  release_cookie = System.get_env("RELEASE_COOKIE")
+
+  if release_cookie do
+    config :singularity_edge, :release_cookie, String.to_atom(release_cookie)
+  end
 
   # ## SSL Support
   #

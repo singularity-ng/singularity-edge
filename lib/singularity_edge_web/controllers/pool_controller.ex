@@ -6,10 +6,16 @@ defmodule SingularityEdgeWeb.PoolController do
   use SingularityEdgeWeb, :controller
 
   alias SingularityEdge.Balancer.Pool
+  alias SingularityEdge.Storage
 
   def index(conn, _params) do
-    # List all pools (would need a registry lookup in production)
-    json(conn, %{pools: []})
+    case Storage.Pool.list() do
+      {:ok, pools} ->
+        json(conn, %{pools: pools})
+
+      {:error, _reason} ->
+        json(conn, %{pools: []})
+    end
   end
 
   def create(conn, %{"name" => name, "algorithm" => algorithm}) do
