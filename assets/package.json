@@ -1,0 +1,15 @@
+{
+  "name": "singularity-edge-assets",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Asset build for Singularity Edge",
+  "repository": {},
+  "license": "Apache-2.0",
+  "scripts": {
+    "deploy": "NODE_ENV=production tailwindcss --input=css/app.css --output=../priv/static/assets/css/app.css --minify"
+  },
+  "dependencies": {
+    "@heroicons/react": "^2.2.0"
+  },
+  "devDependencies": {}
+}
