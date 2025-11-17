@@ -36,7 +36,16 @@ defmodule SingularityEdge.Application do
 
   defp setup_mnesia do
     # Setup Mnesia on application start
-    SingularityEdge.Mnesia.setup()
+    try do
+      SingularityEdge.Mnesia.setup()
+    rescue
+      e ->
+        require Logger
+        Logger.error("Failed to setup Mnesia: #{inspect(e)}")
+        Logger.error("Mnesia stacktrace: #{Exception.format_stacktrace()}")
+        # Re-raise to prevent app from starting with broken database
+        reraise e, __STACKTRACE__
+    end
   end
 
   # Tell Phoenix to update the endpoint configuration

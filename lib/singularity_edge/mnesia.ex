@@ -47,16 +47,22 @@ defmodule SingularityEdge.Mnesia do
   Starts Mnesia and creates tables.
   """
   def setup do
+    Logger.info("Starting Mnesia setup...")
+
     # Ensure Mnesia directory exists
+    Logger.info("Ensuring Mnesia directory exists...")
     ensure_mnesia_dir()
 
     # Start Mnesia
+    Logger.info("Starting Mnesia...")
     :mnesia.start()
 
     # Create tables
+    Logger.info("Creating Mnesia tables...")
     create_tables()
 
     # Wait for tables
+    Logger.info("Waiting for Mnesia tables to be ready...")
     :mnesia.wait_for_tables([:certificates, :pools, :backends], 5000)
 
     Logger.info("Mnesia setup complete")
