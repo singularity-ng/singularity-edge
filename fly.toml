@@ -22,9 +22,9 @@ kill_timeout = "5s"
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = false
-  auto_start_machines = true
-  min_machines_running = 1
+  auto_stop_machines = true   # Scale to 0 when idle (saves costs)
+  auto_start_machines = true   # Auto-start on incoming requests
+  min_machines_running = 0     # Allow scaling to 0 machines
   processes = ["app"]
 
   [[http_service.checks]]
@@ -72,4 +72,4 @@ kill_timeout = "5s"
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
-  memory_mb = 512
+  memory_mb = 256  # Smallest size for cost optimization
