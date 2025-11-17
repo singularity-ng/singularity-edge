@@ -5,29 +5,36 @@ defmodule SingularityEdgeWeb.CertificateController do
 
   use SingularityEdgeWeb, :controller
 
-  alias SingularityEdge.{Repo, SSL.Certificate, SSL.ACME}
-  import Ecto.Query
+  alias SingularityEdge.SSL.{Certificate, ACME}
 
   def index(conn, _params) do
-    certificates =
-      Certificate
-      |> order_by(desc: :inserted_at)
-      |> Repo.all()
+    case Certificate.list() do
+      {:ok, certificates} ->
+        json(conn, %{
+          certificates: Enum.map(certificates, &serialize_certificate/1)
+        })
 
-    json(conn, %{
-      certificates: Enum.map(certificates, &serialize_certificate/1)
-    })
+      {:error, reason} ->
+        conn
+        |> put_status(:internal_server_error)
+        |> json(%{error: inspect(reason)})
+    end
   end
 
   def show(conn, %{"id" => id}) do
-    case Repo.get(Certificate, id) do
-      nil ->
+    case Certificate.get(id) do
+      {:error, :not_found} ->
         conn
         |> put_status(:not_found)
         |> json(%{error: "Certificate not found"})
 
-      certificate ->
+      {:ok, certificate} ->
         json(conn, serialize_certificate(certificate))
+
+      {:error, reason} ->
+        conn
+        |> put_status(:internal_server_error)
+        |> json(%{error: inspect(reason)})
     end
   end
 
@@ -47,29 +54,40 @@ defmodule SingularityEdgeWeb.CertificateController do
   end
 
   def delete(conn, %{"id" => id}) do
-    case Repo.get(Certificate, id) do
-      nil ->
+    case Certificate.get(id) do
+      {:error, :not_found} ->
         conn
         |> put_status(:not_found)
         |> json(%{error: "Certificate not found"})
 
-      certificate ->
-        Repo.delete!(certificate)
+      {:ok, _certificate} ->
+        case Certificate.delete(id) do
+          :ok ->
+            conn
+            |> put_status(:no_content)
+            |> json(%{})
 
+          {:error, reason} ->
+            conn
+            |> put_status(:internal_server_error)
+            |> json(%{error: inspect(reason)})
+        end
+
+      {:error, reason} ->
         conn
-        |> put_status(:no_content)
-        |> json(%{})
+        |> put_status(:internal_server_error)
+        |> json(%{error: inspect(reason)})
     end
   end
 
   def renew(conn, %{"id" => id}) do
-    case Repo.get(Certificate, id) do
-      nil ->
+    case Certificate.get(id) do
+      {:error, :not_found} ->
         conn
         |> put_status(:not_found)
         |> json(%{error: "Certificate not found"})
 
-      certificate ->
+      {:ok, certificate} ->
         case ACME.renew_certificate(certificate) do
           {:ok, _cert} ->
             json(conn, %{status: "renewed"})
@@ -79,6 +97,11 @@ defmodule SingularityEdgeWeb.CertificateController do
             |> put_status(:unprocessable_entity)
             |> json(%{error: inspect(reason)})
         end
+
+      {:error, reason} ->
+        conn
+        |> put_status(:internal_server_error)
+        |> json(%{error: inspect(reason)})
     end
   end
 

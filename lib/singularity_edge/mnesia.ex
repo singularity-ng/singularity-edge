@@ -15,11 +15,6 @@ defmodule SingularityEdge.Mnesia do
   - Fast in-memory + disk persistence
   """
 
-  use Memento.Table,
-    attributes: [:key, :value, :metadata, :inserted_at, :updated_at],
-    index: [:inserted_at],
-    type: :set
-
   require Logger
 
   @doc """
