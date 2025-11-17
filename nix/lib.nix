@@ -59,13 +59,13 @@ rec {
     # === Development Tools ===
     git                # Version control
     gh                 # GitHub CLI
-    flyctl             # Fly.io CLI
+    # flyctl             # Fly.io CLI - install manually: curl -L https://fly.io/install.sh | sh
     just               # Task runner
     direnv             # Environment management
     jq                 # JSON processor
     curl               # HTTP client
     cachix             # Nix binary cache
-    postgresql_17      # PostgreSQL database
+    # postgresql_17      # Not needed - using Mnesia
   ];
 
   rustTools = { pkgs, rustToolchain }: with pkgs; [
