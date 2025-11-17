@@ -61,6 +61,10 @@ WORKDIR /app
 COPY --from=deps /app/deps /app/deps
 COPY --from=assets /app/priv/static /app/priv/static
 
+# Cache-busting: force re-copy of application code
+ARG CACHEBUST=2
+RUN echo "Code cache bust: $CACHEBUST"
+
 # Copy application code
 COPY lib lib/
 COPY config config/
