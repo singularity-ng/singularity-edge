@@ -32,12 +32,13 @@ RUN mix deps.get --only prod
 # ====================================
 FROM deps AS assets
 
-ARG CACHEBUST=1
-RUN echo "Cache bust: $CACHEBUST"
-
 RUN apk add --no-cache nodejs npm
 
 WORKDIR /app
+
+# Cache-busting: force re-copy of assets
+ARG CACHEBUST=1
+RUN echo "Cache bust: $CACHEBUST"
 
 # Copy assets
 COPY assets assets/
