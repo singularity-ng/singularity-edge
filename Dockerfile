@@ -4,7 +4,7 @@
 ARG ELIXIR_VERSION=1.17.3
 ARG ERLANG_VERSION=27.1.2
 ARG ALPINE_VERSION=3.20.3
-ARG CACHEBUST=2
+ARG CACHEBUST=3
 
 # ====================================
 # Stage 1: Build Dependencies
@@ -37,7 +37,7 @@ RUN apk add --no-cache nodejs npm
 WORKDIR /app
 
 # Cache-busting: force re-copy of assets
-ARG CACHEBUST=2
+ARG CACHEBUST=3
 RUN echo "Cache bust: $CACHEBUST"
 
 # Copy assets
@@ -62,7 +62,7 @@ COPY --from=deps /app/deps /app/deps
 COPY --from=assets /app/priv/static /app/priv/static
 
 # Cache-busting: force re-copy of application code
-ARG CACHEBUST=2
+ARG CACHEBUST=3
 RUN echo "Code cache bust: $CACHEBUST"
 
 # Copy application code
