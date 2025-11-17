@@ -42,6 +42,7 @@ COPY priv priv/
 # Install and build assets
 RUN cd assets && npm install
 COPY config config/
+ENV MIX_ENV=prod
 RUN mix assets.deploy
 
 # ====================================
