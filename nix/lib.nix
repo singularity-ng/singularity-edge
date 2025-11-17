@@ -4,6 +4,36 @@
 { ... }:
 
 rec {
+  # Shared function to load Fly.io API token (used by devShells)
+  # Checks .envrc.local, .env.local, .env, .env.prod in order
+  loadFlyToken = ''
+    # Load Fly.io API token from .env files if available
+    # Priority: .envrc.local (local overrides) > .env.local > .env (base) > .env.prod (production secrets)
+    # Following Nix/direnv best practices: .envrc.local for local dev, .env for shared defaults
+    if [ -z "$FLY_API_TOKEN" ]; then
+      for env_file in .envrc.local .env.local .env .env.prod; do
+        if [ -f "$env_file" ]; then
+          # Try the format: export FLY_API_TOKEN="value"
+          FLY_API_TOKEN=$(grep "^export FLY_API_TOKEN=" "$env_file" 2>/dev/null | cut -d'"' -f2 | head -1)
+          # If not found, try the format: FLY_API_TOKEN=value (without export)
+          if [ -z "$FLY_API_TOKEN" ]; then
+            FLY_API_TOKEN=$(grep "^FLY_API_TOKEN=" "$env_file" 2>/dev/null | cut -d'=' -f2- | head -1 | sed 's/^"//' | sed 's/"$//')
+          fi
+          [ -n "$FLY_API_TOKEN" ] && break
+        fi
+      done
+      [ -n "$FLY_API_TOKEN" ] && export FLY_API_TOKEN
+    fi
+
+    # Configure flyctl if token is available
+    if [ -n "$FLY_API_TOKEN" ] && command -v flyctl >/dev/null 2>&1; then
+      # Just check if token is available - authentication will be tested when needed
+      echo "✅ Fly.io API token configured (available for deployments)"
+    elif [ -z "$FLY_API_TOKEN" ]; then
+      echo "⚠️  Fly.io API token not found. Set FLY_API_TOKEN or add to .envrc.local/.env.local/.env/.env.prod"
+    fi
+  '';
+
   # Common tool sets used across devShells
   commonTools = pkgs: with pkgs; [
     # === Core Elixir/Erlang Toolchain ===

@@ -1,0 +1,15 @@
+# Local development environment variables
+# Copy this file to .envrc.local and fill in your values
+# .envrc.local is gitignored and will be automatically loaded by direnv
+
+# Fly.io API Token (get from: flyctl auth token)
+export FLY_API_TOKEN="your_fly_api_token_here"
+
+# Phoenix Secret Key Base (generated with: mix phx.gen.secret)
+export SECRET_KEY_BASE="your_secret_key_base_here"
+
+# Database configuration (optional, defaults work for local dev)
+# export DATABASE_URL="ecto://postgres:postgres@localhost:5433/singularity_edge_dev"
+
+# Custom domain for SSL testing (optional)
+# export SSL_TEST_DOMAIN="local.example.com"

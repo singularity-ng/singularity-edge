@@ -15,6 +15,10 @@ pkgs.mkShell {
     ${lib.setupEnvironment pkgs}
     ${lib.setupElixir}
     ${lib.setupRust}
+
+    # Load and configure Fly.io API token (shared function)
+    ${lib.loadFlyToken}
+
     ${lib.setupPaths}
     ${lib.installDeps}
 
