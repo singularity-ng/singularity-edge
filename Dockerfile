@@ -12,7 +12,9 @@ FROM hexpm/elixir:${ELIXIR_VERSION}-erlang-${ERLANG_VERSION}-alpine-${ALPINE_VER
 
 RUN apk add --no-cache \
     git \
-    build-base
+    build-base \
+    rocksdb \
+    rocksdb-dev
 
 WORKDIR /app
 
@@ -73,7 +75,8 @@ RUN apk add --no-cache \
     libstdc++ \
     openssl \
     ncurses-libs \
-    ca-certificates
+    ca-certificates \
+    rocksdb
 
 # Create app user
 RUN addgroup -g 1000 app && \

@@ -44,6 +44,7 @@ rec {
     pkg-config
     openssl
     cacert
+    rocksdb  # RocksDB for Mnesia backend
 
     # === General Code Quality Tools ===
     tokei              # Fast code line counter

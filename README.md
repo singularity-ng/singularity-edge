@@ -11,6 +11,7 @@ Singularity Edge is a distributed, fault-tolerant load balancing solution design
 - **High Availability**: Distributed Elixir nodes with automatic clustering
 - **Real-time Monitoring**: Phoenix LiveDashboard for observability
 - **REST API**: Full API for programmatic management
+- **Zero External Dependencies**: Mnesia + RocksDB for distributed storage (no PostgreSQL needed!)
 - **CLI Tool**: Rust-based CLI for automation (coming soon)
 
 ## Architecture

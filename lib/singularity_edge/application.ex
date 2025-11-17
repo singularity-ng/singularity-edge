@@ -7,9 +7,11 @@ defmodule SingularityEdge.Application do
 
   @impl true
   def start(_type, _args) do
+    # Setup Mnesia before starting children
+    setup_mnesia()
+
     children = [
       SingularityEdgeWeb.Telemetry,
-      SingularityEdge.Repo,
       {DNSCluster, query: Application.get_env(:singularity_edge, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: SingularityEdge.PubSub},
 
@@ -30,6 +32,11 @@ defmodule SingularityEdge.Application do
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: SingularityEdge.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  defp setup_mnesia do
+    # Setup Mnesia on application start
+    SingularityEdge.Mnesia.setup()
   end
 
   # Tell Phoenix to update the endpoint configuration
