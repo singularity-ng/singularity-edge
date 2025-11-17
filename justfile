@@ -215,6 +215,23 @@ deploy-global:
   flyctl scale count 3 --region iad,lhr,nrt
   @echo "✅ Global deployment complete!"
 
+# Rotate Fly.io secrets (run if compromised or periodically)
+secrets-rotate:
+  @echo "🔐 Rotating Fly.io secrets..."
+  @echo "Generating new SECRET_KEY_BASE..."
+  @SECRET_KEY_BASE=$(mix phx.gen.secret) && \
+  echo "Generating new RELEASE_COOKIE..." && \
+  RELEASE_COOKIE=$(openssl rand -base64 32) && \
+  echo "Setting secrets on Fly.io..." && \
+  flyctl secrets set -a singularity-edge \
+    SECRET_KEY_BASE="$$SECRET_KEY_BASE" \
+    RELEASE_COOKIE="$$RELEASE_COOKIE" && \
+  echo "✅ Secrets rotated successfully!" && \
+  echo "" && \
+  echo "⚠️  IMPORTANT: Save these secrets in a secure location:" && \
+  echo "   SECRET_KEY_BASE=$$SECRET_KEY_BASE" && \
+  echo "   RELEASE_COOKIE=$$RELEASE_COOKIE"
+
 # ==============================================================================
 # DOCUMENTATION
 # ==============================================================================
