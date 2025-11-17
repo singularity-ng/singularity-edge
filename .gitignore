@@ -4,6 +4,7 @@ result-*
 .direnv/
 .devenv/
 .envrc.local
+devenv.lock
 
 # Development
 .nix-*

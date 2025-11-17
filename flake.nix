@@ -10,6 +10,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
+    devenv.url = "github:cachix/devenv";
     crane = {
       url = "github:ipetkov/crane";
     };
@@ -21,7 +22,7 @@
 
   # Following Nix Pills #12: Inputs Design Pattern
   # https://nixos.org/guides/nix-pills/12-inputs-design-pattern.html
-  outputs = { self, nixpkgs, rust-overlay, flake-utils, crane, advisory-db }:
+  outputs = { self, nixpkgs, rust-overlay, flake-utils, devenv, crane, advisory-db }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [ (import rust-overlay) ];
