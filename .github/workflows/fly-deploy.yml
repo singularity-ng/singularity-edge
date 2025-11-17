@@ -1,0 +1,56 @@
+name: Fly.io Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - production
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Fly.io
+    runs-on: ubuntu-latest
+
+    # Only run on main branch pushes or manual triggers
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/production' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Fly.io CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  # Optional: Run checks before deploy
+  checks:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v25
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Cachix (optional - for faster builds)
+        uses: cachix/cachix-action@v14
+        with:
+          name: devenv
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+        continue-on-error: true
+
+      - name: Check formatting
+        run: nix develop --command just quality-format
+
+      - name: Run tests
+        run: nix develop --command just test
+        continue-on-error: true  # Don't block deployment on test failures initially

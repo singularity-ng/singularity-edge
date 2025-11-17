@@ -95,11 +95,45 @@ curl -X POST http://localhost:4000/api/pools/my-app/backends \
 
 ### Deployment
 
-Deploy to Fly.io (multiple regions for global coverage):
+#### Automatic Deployments from GitHub
+
+1. **One-time setup**:
+   ```bash
+   # Create Fly.io app
+   flyctl launch --no-deploy
+
+   # Get deploy token
+   flyctl tokens create deploy
+
+   # Add token to GitHub Secrets:
+   # - Go to: https://github.com/singularity-ng/singularity-edge/settings/secrets/actions
+   # - Create secret: FLY_API_TOKEN
+   # - Paste the token
+   ```
+
+2. **Push to deploy**:
+   ```bash
+   git push origin main
+   # GitHub Actions automatically deploys to Fly.io!
+   ```
+
+3. **Monitor deployment**:
+   ```bash
+   flyctl status
+   flyctl logs
+   flyctl dashboard
+   ```
+
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for complete deployment guide including multi-region setup and scaling.
+
+#### Manual Deployment
 
 ```bash
-# Coming soon
-just deploy
+# Deploy from local machine
+flyctl deploy
+
+# Deploy to multiple regions
+flyctl scale count 3 --region iad,lhr,nrt
 ```
 
 ## Development
