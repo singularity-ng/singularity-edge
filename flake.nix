@@ -1,5 +1,5 @@
 {
-  description = "Singularity Edge - Global Load Balancer and Edge Routing Service";
+  description = "Singularity Edge - Global Load Balancer and Edge Routing Service (Elixir/Phoenix + Rust CLI)";
 
   # Nix configuration for binary caches is handled by direnv in .envrc
   # This avoids approval prompts and provides better caching control
@@ -8,28 +8,37 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
+    crane = {
+      url = "github:ipetkov/crane";
+    };
+    advisory-db = {
+      url = "github:rustsec/advisory-db";
+      flake = false;
+    };
   };
 
   # Following Nix Pills #12: Inputs Design Pattern
   # https://nixos.org/guides/nix-pills/12-inputs-design-pattern.html
-  # - All inputs declared at top level (inputs = { ... })
-  # - Outputs function takes inputs as arguments (no direct imports)
-  # - Single nixpkgs import, passed down to packages
-  # - Packages are independent and customizable via inputs
-  outputs = { self, nixpkgs, flake-utils }:
-    # Build for all default systems (Linux, macOS/Darwin, etc.)
+  outputs = { self, nixpkgs, rust-overlay, flake-utils, crane, advisory-db }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        # Single nixpkgs import (as per inputs pattern) - passed to all packages
-        # Following Nix Pills #16: Nixpkgs Parameters
-        # https://nixos.org/guides/nix-pills/16-nixpkgs-parameters.html
+        overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs {
-          inherit system;
-          config.allowUnfree = true;  # Required for unfree packages if needed
+          inherit system overlays;
+          config.allowUnfree = true;
         };
 
         stdenv = pkgs.stdenv;
+
+        # Rust toolchain with all extensions (for development)
+        rustToolchain = pkgs.rust-bin.stable.latest.default.override {
+          extensions = [ "rust-src" "rust-analyzer" "clippy" "rustfmt" ];
+        };
+
+        # Crane library for building Rust CLI
+        craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
         # Import shared library functions
         lib = import ./nix/lib.nix { };
@@ -37,7 +46,7 @@
         # Import devShell modules
         devShells = {
           default = import ./nix/devShells/default.nix {
-            inherit pkgs lib;
+            inherit pkgs rustToolchain lib;
           };
         };
 
