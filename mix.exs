@@ -67,10 +67,9 @@ defmodule SingularityEdge.MixProject do
 
       # SSL/TLS
       {:site_encrypt, "~> 0.6"},
-      {:x509, "~> 0.8"},
+      {:x509, "~> 0.8"}
 
-      # Mnesia with RocksDB backend (no 2GB limit, better performance)
-      {:mnesia_rocksdb, "~> 1.1"}
+      # Mnesia is built into Erlang/OTP - no additional dependencies needed
     ]
   end
 

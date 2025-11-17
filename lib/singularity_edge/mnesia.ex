@@ -69,35 +69,34 @@ defmodule SingularityEdge.Mnesia do
   end
 
   @doc """
-  Creates Mnesia tables for all schemas using RocksDB backend.
+  Creates Mnesia tables for all schemas using disc persistence.
 
-  RocksDB backend provides:
-  - No 2GB table size limit
-  - Lower RAM usage
-  - Better write performance
-  - Same Mnesia API
+  Mnesia disc_copies provides:
+  - Data persisted to disk
+  - In-memory caching for performance
+  - Built into Erlang/OTP
   """
   def create_tables do
-    # Certificates table (RocksDB backend)
+    # Certificates table (disc persistence)
     create_table(:certificates, [
       {:type, :set},
-      {:rocksdb_copies, [node()]},  # RocksDB instead of disc_copies
+      {:disc_copies, [node()]},  # Persisted to disk
       {:attributes, [:id, :domain, :certificate, :private_key, :chain, :issuer, :expires_at, :auto_renew, :provider, :metadata, :inserted_at, :updated_at]},
       {:index, [:domain, :expires_at]}
     ])
 
-    # Pools table (RocksDB backend)
+    # Pools table (disc persistence)
     create_table(:pools, [
       {:type, :set},
-      {:rocksdb_copies, [node()]},
+      {:disc_copies, [node()]},
       {:attributes, [:name, :algorithm, :ssl_mode, :ssl_domain, :ssl_cert_id, :validate_backend_cert, :health_check_interval, :metadata, :inserted_at, :updated_at]},
       {:index, [:ssl_domain]}
     ])
 
-    # Backends table (RocksDB backend)
+    # Backends table (disc persistence)
     create_table(:backends, [
       {:type, :set},
-      {:rocksdb_copies, [node()]},
+      {:disc_copies, [node()]},
       {:attributes, [:id, :pool_name, :host, :port, :scheme, :weight, :healthy, :current_connections, :total_requests, :last_check, :ssl_verify, :metadata, :inserted_at, :updated_at]},
       {:index, [:pool_name, :healthy]}
     ])
@@ -143,10 +142,10 @@ defmodule SingularityEdge.Mnesia do
     tables = [:certificates, :pools, :backends]
 
     Enum.each(tables, fn table ->
-      # Use RocksDB backend for replication
-      case :mnesia.add_table_copy(table, node, :rocksdb_copies) do
+      # Use disc_copies for replication
+      case :mnesia.add_table_copy(table, node, :disc_copies) do
         {:atomic, :ok} ->
-          Logger.info("Replicated table #{table} to #{node} (RocksDB)")
+          Logger.info("Replicated table #{table} to #{node}")
 
         {:aborted, {:already_exists, ^table, ^node}} ->
           Logger.debug("Table #{table} already exists on #{node}")
