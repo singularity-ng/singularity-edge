@@ -1,8 +1,9 @@
 # Default development shell with Elixir and all tools
 # Full-featured development environment for singularity-edge
-
-{ pkgs, lib }:
-
+{
+  pkgs,
+  lib,
+}:
 pkgs.mkShell {
   name = "singularity-edge-devshell";
 

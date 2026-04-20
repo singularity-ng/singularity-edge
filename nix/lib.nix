@@ -1,9 +1,6 @@
 # Shared utility functions for flake modules
 # Used across devShells and other modules
-
-{ ... }:
-
-rec {
+_: rec {
   # Shared function to load Fly.io API token (used by devShells)
   # Checks .envrc.local, .env.local, .env, .env.prod in order
   loadFlyToken = ''
@@ -35,37 +32,38 @@ rec {
   '';
 
   # Common tool sets used across devShells
-  commonTools = pkgs: with pkgs; [
-    # === Core Elixir/Erlang Toolchain ===
-    beam.packages.erlang_28.elixir_1_19
-    beam.packages.erlang_28.erlang
+  commonTools = pkgs:
+    with pkgs; [
+      # === Core Elixir/Erlang Toolchain ===
+      beam.packages.erlang_28.elixir_1_19
+      beam.packages.erlang_28.erlang
 
-    # === Core Build Dependencies ===
-    pkg-config
-    openssl
-    cacert
-    rocksdb  # RocksDB for Mnesia backend
+      # === Core Build Dependencies ===
+      pkg-config
+      openssl
+      cacert
+      rocksdb # RocksDB for Mnesia backend
 
-    # === General Code Quality Tools ===
-    tokei              # Fast code line counter
-    gitleaks           # Secret scanning
-    shellcheck         # Shell script linting
-    yamllint           # YAML file linting
-    nodejs_22          # Node runtime (for assets)
-    bun                # Fast JavaScript runtime
-  ];
+      # === General Code Quality Tools ===
+      tokei # Fast code line counter
+      gitleaks # Secret scanning
+      shellcheck # Shell script linting
+      yamllint # YAML file linting
+      nodejs_22 # Node runtime (for assets)
+      bun # Fast JavaScript runtime
+    ];
 
-  devTools = pkgs: with pkgs; [
-    # === Development Tools ===
-    git                # Version control
-    gh                 # GitHub CLI
-    # flyctl             # Fly.io CLI - install manually: curl -L https://fly.io/install.sh | sh
-    just               # Task runner
-    direnv             # Environment management
-    jq                 # JSON processor
-    curl               # HTTP client
-  ];
-
+  devTools = pkgs:
+    with pkgs; [
+      # === Development Tools ===
+      git # Version control
+      gh # GitHub CLI
+      # flyctl             # Fly.io CLI - install manually: curl -L https://fly.io/install.sh | sh
+      just # Task runner
+      direnv # Environment management
+      jq # JSON processor
+      curl # HTTP client
+    ];
 
   # Common shellHook components
   setupEnvironment = pkgs: ''
@@ -81,7 +79,6 @@ rec {
     export HEX_HOME=$PWD/.nix-hex
     export ERL_AFLAGS="-kernel shell_history enabled"
   '';
-
 
   setupPaths = ''
     # Add local bins to PATH

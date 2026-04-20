@@ -14,18 +14,19 @@
 
   # Following Nix Pills #12: Inputs Design Pattern
   # https://nixos.org/guides/nix-pills/12-inputs-design-pattern.html
-  outputs = { self, nixpkgs, flake-utils, devenv }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
+  outputs = {
+    nixpkgs,
+    flake-utils,
+  }:
+    flake-utils.lib.eachDefaultSystem (
+      system: let
         pkgs = import nixpkgs {
           inherit system;
           config.allowUnfree = true;
         };
 
-        stdenv = pkgs.stdenv;
-
         # Import shared library functions
-        lib = import ./nix/lib.nix { };
+        lib = import ./nix/lib.nix {};
 
         # Import devShell modules
         devShells = {
@@ -33,9 +34,7 @@
             inherit pkgs lib;
           };
         };
-
-      in
-      {
+      in {
         inherit devShells;
 
         # Formatter for nix files
